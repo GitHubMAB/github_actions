@@ -1,0 +1,26 @@
+name: Azure Login
+
+on:
+  push:
+    branches:
+      - main  # Exécuter à chaque push sur la branche 'main'
+
+jobs:
+  azure-login:
+    runs-on: ubuntu-latest  # Utilise l'image Ubuntu pour le runner
+
+    steps:
+      # Étape 1 : Checkout du code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Connecte-toi à Azure via le service principal
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant les informations du service principal
+
+      # Étape 3 (facultative) : Vérifie que la connexion fonctionne
+      - name: Azure CLI Test
+        run: |
+          az account show
