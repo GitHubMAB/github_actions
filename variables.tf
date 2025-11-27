@@ -14,5 +14,5 @@ variable "rg_name" {
 variable "location" {
   description = "La région où le groupe de ressources sera créé"
   type        = string
-  default     = "East US"
+  default     = "westeurope"
 }
