@@ -43,7 +43,12 @@ jobs:
         if: github.event_name == 'push'  # Applique uniquement sur un push (pas lors des PR)
         run: terraform apply -auto-approve
 
-      # Étape 7 : Supprimer les ressources Terraform (destroy) (facultatif)
-      #- name: Terraform Destroy
-      #  if: github.event.inputs.destroy == 'true'  # Permet de supprimer les ressources via un paramètre dans l'interface GitHub
-      # run: terraform destroy -auto-approve
+       # Étape 7 : Commit tfstate 
+      - name: Commit and Push terraform state
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add terraform.tfstate
+          git commit -m "Commit terraform state"
+          git push origin main
+
