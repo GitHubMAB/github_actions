@@ -31,6 +31,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant le JSON du Service Principal
       # Étape 4 : Initialiser Terraform
       - name: Terraform Init
+        run: terraform init
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
