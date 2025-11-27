@@ -1,0 +1,49 @@
+name: Terraform Azure Workflow
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le workflow sur un push vers la branche 'main'
+  pull_request:
+    branches:
+      - main  # Déclenche le workflow lors de la création d'une PR vers la branche 'main'
+  workflow_dispatch:  # Permet d'exécuter manuellement le workflow depuis l'interface GitHub
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest  # Utilise Ubuntu comme environnement de runner
+
+    steps:
+      # Étape 1 : Checkout du code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Installer Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfères
+
+      # Étape 3 : Configurer les credentials Azure
+      - name: Set up Azure credentials
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant le JSON du Service Principal
+
+      # Étape 4 : Initialiser Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Étape 5 : Exécuter Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan
+
+      # Étape 6 : Appliquer Terraform (applique uniquement sur un push, pas lors des PR)
+      - name: Terraform Apply
+        if: github.event_name == 'push'  # Applique uniquement sur un push (pas lors des PR)
+        run: terraform apply -auto-approve
+
+      # Étape 7 : Supprimer les ressources Terraform (destroy) (facultatif)
+      - name: Terraform Destroy
+        if: github.event.inputs.destroy == 'true'  # Permet de supprimer les ressources via un paramètre dans l'interface GitHub
+        run: terraform destroy -auto-approve
