@@ -44,6 +44,6 @@ jobs:
         run: terraform apply -auto-approve
 
       # Étape 7 : Supprimer les ressources Terraform (destroy) (facultatif)
-      - name: Terraform Destroy
-        if: github.event.inputs.destroy == 'true'  # Permet de supprimer les ressources via un paramètre dans l'interface GitHub
-        run: terraform destroy -auto-approve
+      #- name: Terraform Destroy
+      #  if: github.event.inputs.destroy == 'true'  # Permet de supprimer les ressources via un paramètre dans l'interface GitHub
+      # run: terraform destroy -auto-approve
