@@ -35,6 +35,10 @@ jobs:
         run: terraform init
       - name: Check if terraform.tfstate exists
         run: ls -l terraform.tfstate
+      - name: show state list
+        run: terraform state list
+      - name: show rg in state
+        run: terraform state show azurerm_resource_group.example
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
