@@ -35,6 +35,8 @@ jobs:
         run: terraform init
       - name: Check if terraform.tfstate exists
         run: ls -l terraform.tfstate
+      - name: show state content
+        run: cat terraform.tfstate
       - name: show state list
         run: terraform state list
       - name: show rg in state
