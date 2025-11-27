@@ -8,7 +8,7 @@ variable "subscription_id" {
 variable "rg_name" {
   description = "Le nom du groupe de ressources"
   type        = string
-  default     = "my-resource-group"
+  default     = "myRg-Deep"
 }
 
 variable "location" {
