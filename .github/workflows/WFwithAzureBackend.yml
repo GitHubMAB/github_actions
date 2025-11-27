@@ -23,7 +23,11 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfères
-
+      - name: Test access to Azure Storage Account
+        run: |
+          az storage container list \
+            --account-name ${{ secrets.TF_SA }} \
+            --auth-mode login
       # Étape 3 : Configurer les credentials Azure
       #- name: Set up Azure credentials
       #  uses: azure/login@v1
