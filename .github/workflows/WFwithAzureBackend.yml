@@ -22,9 +22,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfères
-      - name: Debug - Show ARM variables
-        run: env | grep ARM_
+          terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfère
       
       - name: Debug - Try to access storage account
         run: |
