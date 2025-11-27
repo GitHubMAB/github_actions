@@ -29,10 +29,12 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant le JSON du Service Principal
-
+      # cat files
+      - name: cat files
+        run: cat main.tf
       # Étape 4 : Initialiser Terraform
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config=
       - name: Check if terraform.tfstate exists
         run: ls -l terraform.tfstate
       - name: show state content
