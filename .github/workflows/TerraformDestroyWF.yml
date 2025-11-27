@@ -1,0 +1,33 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:  # Permet d'exécuter le workflow manuellement depuis l'interface GitHub
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest  # Utilisation d'Ubuntu comme environnement de runner
+
+    steps:
+      # Étape 1 : Checkout du code du dépôt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Étape 2 : Installer Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.4.5'  # Version de Terraform que tu utilises
+
+      # Étape 3 : Configurer les credentials Azure
+      - name: Set up Azure credentials
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant le JSON du Service Principal
+
+      # Étape 4 : Initialiser Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Étape 5 : Exécuter Terraform Destroy pour supprimer les ressources
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
