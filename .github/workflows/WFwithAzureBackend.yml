@@ -35,17 +35,32 @@ jobs:
       #       echo "ARM_USE_MSI=false" >> $GITHUB_ENV
       #       echo "ARM_SKIP_CLI_AUTH=true" >> $GITHUB_ENV
       # Étape 4 : Initialiser Terraform
+      #- name: Terraform Init
+      #  run: |  
+      #    terraform init \
+      #      -backend-config="resource_group_name=${{ secrets.TF_RG }}" \
+      #      -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
+      #      -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
+      #      -backend-config="key=${{ secrets.TF_KEY }}" \
+      #      -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+      #      -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+      #      -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+      #      -backend-config="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}"
+      - name: Export ARM variables
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_SKIP_CLI_AUTH=true" >> $GITHUB_ENV
+
       - name: Terraform Init
-        run: |  
+        run: |
           terraform init \
             -backend-config="resource_group_name=${{ secrets.TF_RG }}" \
             -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
             -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
-            -backend-config="key=${{ secrets.TF_KEY }}" \
-            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
-            -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
-            -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
-            -backend-config="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}"
+            -backend-config="key=${{ secrets.TF_KEY }}"
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
