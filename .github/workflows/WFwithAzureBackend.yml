@@ -31,7 +31,8 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}  # Utilise le secret contenant le JSON du Service Principal
       # Étape 4 : Initialiser Terraform
       - name: Terraform Init
-        run: terraform init \
+        run: |  
+          terraform init \
             -backend-config="resource_group_name=${{ secrets.TF_RG }}" \
             -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
             -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
