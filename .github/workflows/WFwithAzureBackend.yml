@@ -80,6 +80,13 @@ jobs:
         with:
           sarif_file: results.sarif
           category: checkov
+      - name: Terraform Init after scan
+        run: |
+          yes yes | terraform init -reconfigure \
+            -backend-config="resource_group_name=${{ secrets.TF_RG }}" \
+            -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
+            -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
+            -backend-config="key=${{ secrets.TF_KEY }}"
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
