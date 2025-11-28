@@ -24,10 +24,6 @@ jobs:
         with:
           terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfère
 
-      # Validate terraform files
-      - name: Terraform Validate
-        run: terraform validate
-
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
@@ -81,6 +77,11 @@ jobs:
             -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
             -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
             -backend-config="key=${{ secrets.TF_KEY }}"
+            # Validate terraform files
+        
+      - name: Terraform Validate
+        run: terraform validate
+        
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
