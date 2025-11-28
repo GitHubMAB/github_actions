@@ -65,7 +65,9 @@ jobs:
         uses: bridgecrewio/checkov-action@master
         with:
           # directory: example/examplea
-          framework: terraform 
+          framework: terraform
+          output_file_path: results.sarif
+          output_format: sarif
       # Perform a security scan of the terraform code using checkov
      # - name: Run Checkov action
       #  id: checkov
@@ -80,6 +82,22 @@ jobs:
         with:
           sarif_file: results.sarif
           category: checkov
+      - name: Commit & push checkov results
+        if: always() # même si Checkov trouve des erreurs
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+      
+          # Ajouter le fichier SARIF
+          git add results.sarif
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Add Checkov scan results"
+            git push origin ${{ github.ref }}
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Terraform Init after scan
         run: |
           yes yes | terraform init -reconfigure \
