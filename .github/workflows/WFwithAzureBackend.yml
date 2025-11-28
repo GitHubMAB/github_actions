@@ -54,13 +54,24 @@ jobs:
       # Validate terraform files
       - name: Terraform Validate
         run: terraform validate
-      
-      # Perform a security scan of the terraform code using checkov
-      - name: Run Checkov action
+
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Test with Checkov
         id: checkov
         uses: bridgecrewio/checkov-action@master
-        with: 
-          framework: terraform
+        with:
+          # directory: example/examplea
+          framework: terraform 
+      # Perform a security scan of the terraform code using checkov
+     # - name: Run Checkov action
+      #  id: checkov
+       # uses: bridgecrewio/checkov-action@master
+       # with: 
+        #  framework: terraform
   
       # Upload results to GitHub Advanced Security
       - name: Upload SARIF file
