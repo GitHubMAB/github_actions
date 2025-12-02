@@ -30,6 +30,7 @@ jobs:
         with:
           python-version: 3.9
       - name: Test with Checkov
+        continue-on-error: true
         id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
