@@ -150,7 +150,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.SECRET2 }}
 
       # Copier kubeconfig dans le dossier standard
       - name: Configure Kubeconfig
