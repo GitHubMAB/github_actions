@@ -127,8 +127,10 @@ jobs:
         with:
           name: kubeconfig
 
-      - name: Move kubeconfig
-        run: mv kubeconfig ~/.kube/config
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          mv kubeconfig ~/.kube/config
 
       # ---------------------------------------------------------------
       # Install kubectl
