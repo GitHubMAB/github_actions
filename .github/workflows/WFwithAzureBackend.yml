@@ -111,7 +111,7 @@ jobs:
       # HELM DEPLOY JOB (runs AFTER AKS is deployed)
       # --------------------------------------------------------------------
   helm-deploy:
-    needs: terraform
+    needs: INFRAProvionning
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
