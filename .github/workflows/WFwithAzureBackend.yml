@@ -118,7 +118,7 @@ jobs:
       - name: Azure login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.SECRET2 }}
       - name: Get AKS credentials
         run: |
           mkdir -p ~/.kube
