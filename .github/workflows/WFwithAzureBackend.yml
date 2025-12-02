@@ -72,14 +72,18 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+      
+          # Ajouter le fichier SARIF
           git add results.sarif
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Add Checkov scan results"
             git push origin ${{ github.ref }}
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
   # ------------------------------
   # JOB 3 : Terraform Apply
