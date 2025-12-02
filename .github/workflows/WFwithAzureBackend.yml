@@ -12,37 +12,11 @@ on:
 jobs:
 
   # ------------------------------
-  # JOB 1 : Checkout & Terraform Setup
-  # ------------------------------
-  terraform-setup:
-    name: Checkout & Setup Terraform
-    runs-on: ubuntu-latest
-    outputs:
-      terraform-workspace: ${{ steps.set-env.outputs.workspace }}
-    steps:
-      # Checkout code
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Installer Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: '1.4.5'
-
-      # Installer Python pour Checkov
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-
-  # ------------------------------
-  # JOB 2 : Checkov Scan & SARIF Upload
+  # JOB 1 : Checkov Scan & SARIF Upload
   # ------------------------------
   checkov-scan:
     name: Terraform Security Scan with Checkov
     runs-on: ubuntu-latest
-    needs: terraform-setup
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -86,13 +60,28 @@ jobs:
 
 
   # ------------------------------
-  # JOB 3 : Terraform Apply
+  # JOB 2 : Terraform Apply
   # ------------------------------
   terraform-apply:
     name: Terraform Init & Apply
     runs-on: ubuntu-latest
-    needs: [terraform-setup, checkov-scan]
+    needs: checkov-scan
     steps:
+            # Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Installer Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.4.5'
+
+      # Installer Python pour Checkov
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -140,7 +129,7 @@ jobs:
           path: kubeconfig
 
   # ------------------------------
-  # JOB 4 : Get AKS Credentials
+  # JOB 3 : Get AKS Credentials
   # ------------------------------
   aks-credentials:
     name: Get AKS Credentials
@@ -178,7 +167,7 @@ jobs:
         run: kubectl get nodes
 
   # ------------------------------
-  # JOB 5 : Install Helm
+  # JOB 4 : Install Helm
   # ------------------------------
   helm-setup:
     name: Install Helm CLI
@@ -193,7 +182,7 @@ jobs:
         uses: azure/setup-helm@v3
 
   # ------------------------------
-  # JOB 6 : Deploy Helm Chart
+  # JOB 5 : Deploy Helm Chart
   # ------------------------------
   helm-deploy:
     name: Deploy Helm Chart to AKS
