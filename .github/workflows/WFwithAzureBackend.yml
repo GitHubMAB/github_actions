@@ -3,46 +3,52 @@ name: Terraform Azure Workflow
 on:
   push:
     branches:
-      - main
+      - main  # Déclenche le workflow sur un push vers la branche 'main'
   pull_request:
     branches:
-      - main
-  workflow_dispatch:
+      - main  # Déclenche le workflow lors de la création d'une PR vers la branche 'main'
+  workflow_dispatch:  # Permet d'exécuter manuellement le workflow depuis l'interface GitHub
 
 jobs:
+  INFRAProvionning:
+    runs-on: ubuntu-latest  # Utilise Ubuntu comme environnement de runner
 
-  # ------------------------------
-  # JOB 1 : Checkov Scan & SARIF Upload
-  # ------------------------------
-  checkov-scan:
-    name: Terraform Security Scan with Checkov
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      # Étape 1 : Checkout du code du dépôt
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Exécuter Checkov
-      - name: Run Checkov
+      # Étape 2 : Installer Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.4.5'  # Utilise la version Terraform que tu préfère
+
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Test with Checkov
         continue-on-error: true
         id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
+          # directory: example/examplea
           framework: terraform
           output_file_path: results.sarif
           output_format: sarif
           quiet: false
-
-      # Upload SARIF pour GitHub Advanced Security
-      - name: Upload SARIF File
+  
+      # Upload results to GitHub Advanced Security
+      - name: Upload SARIF file
         if: success() || failure()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
           category: checkov
-
-      # Commit & push les résultats Checkov
-      - name: Commit & Push Checkov Results
-        if: always()
+      - name: Commit & push checkov results
+        if: always() # même si Checkov trouve des erreurs
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
@@ -58,143 +64,71 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-  # ------------------------------
-  # JOB 2 : Terraform Apply
-  # ------------------------------
-  terraform-apply:
-    name: Terraform Init & Apply
-    runs-on: ubuntu-latest
-    needs: checkov-scan
-    steps:
-            # Checkout code
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Installer Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: '1.4.5'
-
-      # Installer Python pour Checkov
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Export ARM variables
-      - name: Export ARM Variables
+      - name: Export ARM variables
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
           echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
           echo "ARM_SKIP_CLI_AUTH=true" >> $GITHUB_ENV
-
-      # Terraform init
-      - name: Terraform Init
+      - name: Terraform Init after scan
         run: |
           yes yes | terraform init -reconfigure \
             -backend-config="resource_group_name=${{ secrets.TF_RG }}" \
             -backend-config="storage_account_name=${{ secrets.TF_SA }}" \
             -backend-config="container_name=${{ secrets.TF_CONTAINER }}" \
             -backend-config="key=${{ secrets.TF_KEY }}"
-
-      # Terraform validate
+            # Validate terraform files
+        
       - name: Terraform Validate
         run: terraform validate
-
-      # Terraform plan
+        
+      # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
         run: terraform plan
 
-      # Terraform apply (push seulement)
+      # Étape 6 : Appliquer Terraform (applique uniquement sur un push, pas lors des PR)
       - name: Terraform Apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push'  # Applique uniquement sur un push (pas lors des PR)
         run: terraform apply -auto-approve
 
-      # Sauvegarder kubeconfig
-      - name: Save kubeconfig
-        run: terraform output -raw kubeconfig > kubeconfig
+      # -----------------------
+      # Export kubeconfig
+      # -----------------------
+      - name: Save kubeconfig from Terraform output
+        run: |
+          terraform output -raw kubeconfig > kubeconfig
         shell: bash
 
-      # Upload kubeconfig pour les jobs suivants
+      # Archive kubeconfig to pass to the next job
       - name: Upload kubeconfig
         uses: actions/upload-artifact@v4
         with:
           name: kubeconfig
           path: kubeconfig
 
-  # ------------------------------
-  # JOB 3 : Get AKS Credentials
-  # ------------------------------
-  aks-credentials:
-    name: Get AKS Credentials
+      # --------------------------------------------------------------------
+      # HELM DEPLOY JOB (runs AFTER AKS is deployed)
+      # --------------------------------------------------------------------
+  helm-deploy:
+    needs: terraform
     runs-on: ubuntu-latest
-    needs: terraform-apply
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Télécharger kubeconfig généré par Terraform
-      - name: Download kubeconfig
-        uses: actions/download-artifact@v4
-        with:
-          name: kubeconfig
-          path: ./kubeconfig
-
-      # Azure login
-      - name: Azure Login
+      - uses: actions/checkout@v4
+      - name: Azure login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.SECRET2 }}
-
-      # Copier kubeconfig dans le dossier standard
-      - name: Configure Kubeconfig
+      - name: Get AKS credentials
         run: |
           mkdir -p ~/.kube
-          cp ./kubeconfig ~/.kube/config
-
-      # Installer kubectl
+          az aks get-credentials --resource-group rg-aks-mab --name aks-demo --file ~/.kube/config
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
-
-      # Vérifier la connexion
-      - name: Verify Cluster Connection
+      - name: Verify cluster connection
         run: kubectl get nodes
-
-  # ------------------------------
-  # JOB 4 : Install Helm
-  # ------------------------------
-  helm-setup:
-    name: Install Helm CLI
-    runs-on: ubuntu-latest
-    needs: aks-credentials
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Installer Helm
-      - name: Setup Helm
+      - name: Install Helm
         uses: azure/setup-helm@v3
-
-  # ------------------------------
-  # JOB 5 : Deploy Helm Chart
-  # ------------------------------
-  helm-deploy:
-    name: Deploy Helm Chart to AKS
-    runs-on: ubuntu-latest
-    needs: [aks-credentials, helm-setup]
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      # Déployer l’application Helm
       - name: Deploy Helm Chart
         run: |
-          helm upgrade --install myapp ./myapp \
-            --namespace default \
-            --create-namespace
+          helm upgrade --install myapp ./myapp --namespace default --create-namespace
