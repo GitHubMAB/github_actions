@@ -89,7 +89,7 @@ jobs:
 
       # Étape 6 : Appliquer Terraform (applique uniquement sur un push, pas lors des PR)
       - name: Terraform Apply
-        if: github.event_name == 'push'  # Applique uniquement sur un push (pas lors des PR)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: terraform apply -auto-approve
 
       # -----------------------
