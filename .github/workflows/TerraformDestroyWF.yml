@@ -10,7 +10,7 @@ on:
   workflow_dispatch:  # Permet d'exécuter manuellement le workflow depuis l'interface GitHub
 
 jobs:
-  terraform:
+  DESTROY_ALL:
     runs-on: ubuntu-latest  # Utilise Ubuntu comme environnement de runner
 
     steps:
