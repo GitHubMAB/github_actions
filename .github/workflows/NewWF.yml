@@ -10,6 +10,28 @@ on:
   workflow_dispatch:  # Permet d'exécuter manuellement le workflow depuis l'interface GitHub
 
 jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # TruffleHog - Secret Detection
+      - name: TruffleHog Secret Scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --json --only-verified
+
   INFRAProvionning:
     runs-on: ubuntu-latest  # Utilise Ubuntu comme environnement de runner
 
@@ -85,7 +107,54 @@ jobs:
         
       # Étape 5 : Exécuter Terraform Plan
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
+      
+      # Convert plan to JSON
+      - name: Convert Terraform Plan to JSON
+        run: terraform show -json tfplan > tfplan.json
+
+      # Infracost - Cost Estimation
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v2
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      # Generate baseline cost (for PR comparison)
+      - name: Generate Infracost baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          infracost breakdown --path=${TF_ROOT} \
+                              --format=json \
+                              --out-file=/tmp/infracost-base.json
+        continue-on-error: true
+
+      # Generate Infracost cost estimate
+      - name: Generate Infracost cost estimate
+        run: |
+          infracost breakdown --path=${TF_ROOT} \
+                              --format=json \
+                              --out-file=/tmp/infracost.json
+
+      # Generate Infracost diff for PR
+      - name: Generate Infracost diff
+        if: github.event_name == 'pull_request'
+        run: |
+          infracost diff --path=${TF_ROOT} \
+                          --format=json \
+                          --compare-to=/tmp/infracost-base.json \
+                          --out-file=/tmp/infracost-diff.json
+        continue-on-error: true
+
+      # Post Infracost comment on PR
+      - name: Post Infracost comment
+        if: github.event_name == 'pull_request'
+        run: |
+          infracost comment github --path=/tmp/infracost-diff.json \
+                                   --repo=$GITHUB_REPOSITORY \
+                                   --github-token=${{ github.token }} \
+                                   --pull-request=${{ github.event.pull_request.number }} \
+                                   --behavior=update
+        continue-on-error: true
 
       # Étape 6 : Appliquer Terraform (applique uniquement sur un push, pas lors des PR)
       - name: Terraform Apply
