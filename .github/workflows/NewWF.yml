@@ -138,7 +138,7 @@ jobs:
           infracost breakdown --path=${TF_ROOT} \
                               --format=json \
                               --out-file=/tmp/infracost-base.json
-        continue-on-error: true
+        continue-on-error: false
 
       # Generate Infracost cost estimate
       - name: Generate Infracost cost estimate
@@ -148,7 +148,7 @@ jobs:
           infracost breakdown --path=${TF_ROOT} \
                               --format=json \
                               --out-file=/tmp/infracost.json
-        continue-on-error: true
+        continue-on-error: false
 
       # Generate Infracost diff for PR
       - name: Generate Infracost diff
@@ -160,7 +160,7 @@ jobs:
                           --format=json \
                           --compare-to=/tmp/infracost-base.json \
                           --out-file=/tmp/infracost-diff.json
-        continue-on-error: true
+        continue-on-error: false
 
       # Post Infracost comment on PR
       - name: Post Infracost comment
