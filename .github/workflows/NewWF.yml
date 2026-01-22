@@ -132,6 +132,8 @@ jobs:
       # Generate baseline cost (for PR comparison)
       - name: Generate Infracost baseline
         if: github.event_name == 'pull_request'
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: |
           infracost breakdown --path=${TF_ROOT} \
                               --format=json \
@@ -140,14 +142,19 @@ jobs:
 
       # Generate Infracost cost estimate
       - name: Generate Infracost cost estimate
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: |
           infracost breakdown --path=${TF_ROOT} \
                               --format=json \
                               --out-file=/tmp/infracost.json
+        continue-on-error: true
 
       # Generate Infracost diff for PR
       - name: Generate Infracost diff
         if: github.event_name == 'pull_request'
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: |
           infracost diff --path=${TF_ROOT} \
                           --format=json \
@@ -158,6 +165,8 @@ jobs:
       # Post Infracost comment on PR
       - name: Post Infracost comment
         if: github.event_name == 'pull_request'
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}
         run: |
           infracost comment github --path=/tmp/infracost-diff.json \
                                    --repo=$GITHUB_REPOSITORY \
