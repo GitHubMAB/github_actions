@@ -52,39 +52,41 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          DIFF=$(cat diff.txt | python3 -c "
-          import sys, json
-          content = sys.stdin.read()
-          print(json.dumps(content))
-          ")
+          python3 << 'EOF'
+          import json, os, sys, urllib.request
 
-          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-haiku-4-5-20251001\",
-              \"max_tokens\": 1024,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n\" + $DIFF
+          with open("diff.txt", "r") as f:
+              diff = f.read()
+
+          payload = {
+              "model": "claude-haiku-4-5-20251001",
+              "max_tokens": 1024,
+              "messages": [{
+                  "role": "user",
+                  "content": f"Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n{diff}"
               }]
-            }")
+          }
 
-          echo "=== REPONSE API ==="
-          echo "$RESPONSE"
-          echo "==================="
+          req = urllib.request.Request(
+              "https://api.anthropic.com/v1/messages",
+              data=json.dumps(payload).encode("utf-8"),
+              headers={
+                  "Content-Type": "application/json",
+                  "x-api-key": os.environ["ANTHROPIC_API_KEY"],
+                  "anthropic-version": "2023-06-01"
+              }
+          )
 
-          echo "$RESPONSE" | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          if 'error' in data:
-              print('ERREUR API:', data['error'])
-              sys.exit(1)
-          print(data['content'][0]['text'])
-          " > review.txt
+          with urllib.request.urlopen(req) as response:
+              data = json.loads(response.read())
 
-          cat review.txt
+          review = data["content"][0]["text"]
+          print(review)
+
+          with open("review.txt", "w") as f:
+              f.write(review)
+
+          EOF
 
       - name: Post comment on PR
         uses: actions/github-script@v7
