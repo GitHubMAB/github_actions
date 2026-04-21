@@ -56,24 +56,24 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          DIFF=$(cat diff.txt | python3 -c "
-          import sys, json
-          content = sys.stdin.read()
-          print(json.dumps(content))
-          ")
+          python3 -c "
+          import json
+          diff = open('diff.txt').read()
+          content = 'Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n' + diff
+          data = {
+              'model': 'claude-3-haiku-20240307',
+              'max_tokens': 1024,
+              'messages': [{'role': 'user', 'content': content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          "
 
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-haiku-4-5-20251001\",
-              \"max_tokens\": 1024,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n\" + $DIFF
-              }]
-            }")
+            -d @request.json)
 
           echo "=== REPONSE API ==="
           echo "$RESPONSE"
@@ -117,18 +117,23 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DIFF=$(git diff origin/${{ github.base_ref }}...HEAD)
+          python3 -c "
+          import json
+          diff = '''$DIFF'''
+          content = 'Résume ce diff en une description de PR claire en français : ' + diff
+          data = {
+              'model': 'claude-3-haiku-20240307',
+              'max_tokens': 200,
+              'messages': [{'role': 'user', 'content': content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          "
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-3-haiku-20240307\",
-              \"max_tokens\": 200,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Résume ce diff en une description de PR claire en français : $DIFF\"
-              }]
-            }")
+            -d @request.json)
           DESC=$(echo "$RESPONSE" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['content'][0]['text'])")
           gh pr edit ${{ github.event.pull_request.number }} --body "$DESC"
 
@@ -146,18 +151,23 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           CODE=$(find . -name "*.py" -exec cat {} \; | head -c 4000)  # Exemple pour Python
+          python3 -c "
+          import json
+          code = '''$CODE'''
+          content = 'Génère une documentation README en français pour ce code Python : ' + code
+          data = {
+              'model': 'claude-3-haiku-20240307',
+              'max_tokens': 500,
+              'messages': [{'role': 'user', 'content': content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          "
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-3-haiku-20240307\",
-              \"max_tokens\": 500,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Génère une documentation README en français pour ce code Python : $CODE\"
-              }]
-            }")
+            -d @request.json)
           echo "$RESPONSE" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['content'][0]['text'])" > README.md
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
@@ -175,18 +185,23 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           DIFF=$(git diff origin/${{ github.base_ref }}...HEAD)
+          python3 -c "
+          import json
+          diff = '''$DIFF'''
+          content = 'Analyse ce diff pour des vulnérabilités de sécurité en français : ' + diff
+          data = {
+              'model': 'claude-3-haiku-20240307',
+              'max_tokens': 300,
+              'messages': [{'role': 'user', 'content': content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          "
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-3-haiku-20240307\",
-              \"max_tokens\": 300,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Analyse ce diff pour des vulnérabilités de sécurité en français : $DIFF\"
-              }]
-            }")
+            -d @request.json)
           SCAN=$(echo "$RESPONSE" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['content'][0]['text'])")
           echo "::warning::$SCAN"
 
@@ -205,17 +220,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LOGS=$(git log --oneline ${{ github.event.release.target_commitish }}..HEAD)
+          python3 -c "
+          import json
+          logs = '''$LOGS'''
+          content = 'Génère des notes de release en français pour ces commits : ' + logs
+          data = {
+              'model': 'claude-3-haiku-20240307',
+              'max_tokens': 400,
+              'messages': [{'role': 'user', 'content': content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          "
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-3-haiku-20240307\",
-              \"max_tokens\": 400,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Génère des notes de release en français pour ces commits : $LOGS\"
-              }]
-            }")
+            -d @request.json)
           NOTES=$(echo "$RESPONSE" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['content'][0]['text'])")
           gh release edit ${{ github.event.release.tag_name }} --notes "$NOTES"
