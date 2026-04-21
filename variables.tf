@@ -12,7 +12,7 @@ variable "rg_name" {
 }
 
 variable "location" {
-  description = "La région où le groupe de ressources sera créé"
+  description = "La région où le groupe de ressources sera créé : test AI Review "
   type        = string
   default     = "westeurope"
 }
