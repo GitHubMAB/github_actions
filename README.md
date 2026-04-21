@@ -1,22 +1,16 @@
-# Je serais ravi de générer une documentation README en français !
+# Documentation README
 
-Cependant, je ne vois pas le code Python dans votre message. Le placeholder `$CODE` n'a pas été remplacé par le code réel.
+Je serais ravi de générer une documentation README en français, mais je n'ai pas pu voir le code Python que vous souhaitiez documenter. 
 
-Pourriez-vous s'il vous plaît :
-1. **Copier et coller votre code Python** dans le message
-2. Ou **décrire ce que fait votre code**
+Pourriez-vous **partager votre code** en remplaçant `$CODE` par le code réel ?
 
-## Exemple de ce que je peux générer :
-
-Une fois que vous fournirez le code, je créerai un README complet incluant :
+Une fois que vous fournirez le code, je créerai une documentation README professionnelle incluant :
 
 - 📋 **Description du projet**
-- 🚀 **Installation et configuration**
-- 💡 **Utilisation et exemples**
-- 📦 **Dépendances requises**
-- 🔧 **Configuration**
-- 📝 **Structure du code**
-- ⚠️ **Notes importantes**
-- 📄 **Licence** (si applicable)
+- ⚙️ **Prérequis et installation**
+- 🚀 **Guide d'utilisation**
+- 📚 **Documentation des fonctions/classes**
+- 🔧 **Exemples d'utilisation**
+- 📝 **Notes supplémentaires**
 
-**Veuillez partager votre code et je générerai une belle documentation ! 👍**
+**Merci de coller votre code Python !** 😊
