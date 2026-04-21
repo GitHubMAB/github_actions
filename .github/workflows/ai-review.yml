@@ -182,43 +182,6 @@ jobs:
           git commit -m "Update README via AI" || echo "No changes"
           git push
 
-  ai-security-scan:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: AI Security Scan
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          git fetch origin ${{ github.base_ref }}
-          git diff origin/${{ github.base_ref }}...HEAD > diff.txt
-          if [ ! -s diff.txt ]; then
-            echo "Diff vide, annulation."
-            exit 0
-          fi
-          python3 << 'EOF'
-          import json
-          diff = open('diff.txt').read()
-          content = "Analyse ce diff pour des vulnérabilités de sécurité en français : " + diff
-          data = {
-              "model": "claude-haiku-4-5-20251001",
-              "max_tokens": 300,
-              "messages": [{"role": "user", "content": content}]
-          }
-          with open('request.json', 'w') as f:
-              json.dump(data, f)
-          EOF
-          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: $ANTHROPIC_API_KEY" \
-            -H "anthropic-version: 2023-06-01" \
-            -d @request.json)
-          SCAN=$(echo "$RESPONSE" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['content'][0]['text'])")
-          echo "::warning::$SCAN"
-
   generate-release-notes:
     runs-on: ubuntu-latest
     permissions:
