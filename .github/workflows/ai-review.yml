@@ -56,24 +56,24 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          DIFF=$(cat diff.txt | python3 -c "
-          import sys, json
-          content = sys.stdin.read()
-          print(json.dumps(content))
-          ")
+          python3 << 'EOF'
+          import json
+          diff = open('diff.txt').read()
+          content = "Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n" + diff
+          data = {
+              "model": "claude-3-haiku-20240307",
+              "max_tokens": 1024,
+              "messages": [{"role": "user", "content": content}]
+          }
+          with open('request.json', 'w') as f:
+              json.dump(data, f)
+          EOF
 
           RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             -H "Content-Type: application/json" \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
-            -d "{
-              \"model\": \"claude-haiku-4-5-20251001\",
-              \"max_tokens\": 1024,
-              \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n\" + $DIFF
-              }]
-            }")
+            -d @request.json)
 
           echo "=== REPONSE API ==="
           echo "$RESPONSE"
