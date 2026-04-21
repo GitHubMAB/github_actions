@@ -61,7 +61,7 @@ jobs:
           diff = open('diff.txt').read()
           content = "Tu es un expert en code review. Analyse ce diff Git et donne une review concise en français : bugs potentiels, sécurité, améliorations.\n\n" + diff
           data = {
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-haiku-4-5-20251001",
               "max_tokens": 1024,
               "messages": [{"role": "user", "content": content}]
           }
@@ -122,7 +122,7 @@ jobs:
           diff = """$DIFF"""
           content = "Résume ce diff en une description de PR claire en français : " + diff
           data = {
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-haiku-4-5-20251001",
               "max_tokens": 200,
               "messages": [{"role": "user", "content": content}]
           }
@@ -156,7 +156,7 @@ jobs:
           code = """$CODE"""
           content = "Génère une documentation README en français pour ce code Python : " + code
           data = {
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-haiku-4-5-20251001",
               "max_tokens": 500,
               "messages": [{"role": "user", "content": content}]
           }
@@ -190,7 +190,7 @@ jobs:
           diff = """$DIFF"""
           content = "Analyse ce diff pour des vulnérabilités de sécurité en français : " + diff
           data = {
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-haiku-4-5-20251001",
               "max_tokens": 300,
               "messages": [{"role": "user", "content": content}]
           }
@@ -225,7 +225,7 @@ jobs:
           logs = """$LOGS"""
           content = "Génère des notes de release en français pour ces commits : " + logs
           data = {
-              "model": "claude-3-5-sonnet-20241022",
+              "model": "claude-haiku-4-5-20251001",
               "max_tokens": 400,
               "messages": [{"role": "user", "content": content}]
           }
