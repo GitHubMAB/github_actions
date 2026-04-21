@@ -3,7 +3,7 @@
 # -------------------------
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-aks-mab"
+  name     = "rg-aks-mab-test6"
   location = "northeurope"
 }
 
