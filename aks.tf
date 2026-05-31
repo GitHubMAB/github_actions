@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 # -------------------------
-# AKS Cluster
+# AKS Cluster : AI TEST
 # -------------------------
 
 resource "azurerm_kubernetes_cluster" "aks" {
